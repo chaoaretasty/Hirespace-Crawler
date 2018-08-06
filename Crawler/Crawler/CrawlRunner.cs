@@ -28,14 +28,37 @@ namespace Crawler
 				var nextpage = _crawlCollection.First(y => y.Value.Result == CrawlResult.Waiting).Value;
 				
 				var crawled = await CrawlPage(nextpage);
-				_crawlCollection.Remove(nextpage.Url);
-				_crawlCollection.Add(crawled.Url, crawled);
+				_crawlCollection[nextpage.Url] = crawled;
 
 				foreach (var newpage in (crawled.OutLinks ?? Enumerable.Empty<Uri>())) { AddUrlToCrawl(newpage); }
 
 #if DEBUG
 				if (_crawlCollection.Count(x=>x.Value.Result == CrawlResult.Success) > 20) { break; }
 #endif
+			}
+
+#if DEBUG
+			// Uncrawled pages are not initialised so need to be cleaned up or there will be exceptions thrown when accessing collections
+			// As this issue only affects debug it makes more sense to cleanup here than later
+			var toRemove = _crawlCollection.Where(x => x.Value.Result == CrawlResult.Waiting || x.Value.Result == CrawlResult.Processing).ToList();
+			foreach(var x in toRemove)
+			{
+				_crawlCollection.Remove(x);
+			}
+#endif
+
+			foreach(var page in _crawlCollection)
+			{
+				foreach(var outlink in page.Value.OutLinks)
+				{
+					if (_crawlCollection.ContainsKey(outlink))
+					{
+						var inlinks = _crawlCollection[outlink].InLinks;
+						if (!inlinks.Contains(page.Key)) {
+							inlinks.Add(page.Key);
+						}
+					}
+				}
 			}
 
 			return _crawlCollection;
@@ -72,6 +95,7 @@ namespace Crawler
 				};
 			}
 			parsedPage.Url = page.Url;
+			parsedPage.InLinks = new List<Uri>();
 			return parsedPage;
 		}
 
@@ -83,7 +107,9 @@ namespace Crawler
 
 			page.OutLinks = parsed.Body.QuerySelectorAll("a")
 				.Select(elem => elem.Attributes.SingleOrDefault(attr => attr.Name == "href" && !string.IsNullOrWhiteSpace(attr.Value))?.Value)
-				.Select(Sanitiser.SanitiseLocal).Where(x => x != null);
+				.Select(Sanitiser.SanitiseLocal)
+				.Where(x => x != null)
+				.Distinct();
 
 			return page;
 		}

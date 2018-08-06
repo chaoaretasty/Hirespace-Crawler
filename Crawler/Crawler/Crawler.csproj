@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CrawlOutputer.cs" />
     <Compile Include="CrawlResult.cs" />
     <Compile Include="CrawlRunner.cs" />
     <Compile Include="Page.cs" />
