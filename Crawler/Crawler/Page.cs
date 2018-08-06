@@ -9,7 +9,7 @@ namespace Crawler
         public String Title { get; set; }
         public IList<Uri> InLinks { get; set; }
         public IEnumerable<Uri> OutLinks { get; set; }
-        public CrawlResult Result { get; set; }
+        public CrawlStatus Status { get; set; }
 		public Exception Exception { get; set; }
     }
 }

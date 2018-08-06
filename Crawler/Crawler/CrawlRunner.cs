@@ -23,29 +23,34 @@ namespace Crawler
 		
 		public async Task<IDictionary<Uri, Page>> Crawl()
 		{
-			while(_crawlCollection.Any(x => x.Value.Result == CrawlResult.Waiting))
+			// Currently just iterating individually through the list
+			// The crawl runner code is async throughout to enable running this on multiple tasks and the 
+			// Will need to manage the number of concurrent tasks running rather than letting them them all run as new URLs are discovered
+			// This will prevent memory exhaustion from excessive numbers of tasks and avoid being denied access for sites implementing rate limiting
+
+			while(_crawlCollection.Any(x => x.Value.Status == CrawlStatus.Waiting))
 			{
-				var nextpage = _crawlCollection.First(y => y.Value.Result == CrawlResult.Waiting).Value;
+				var nextpage = _crawlCollection.First(y => y.Value.Status == CrawlStatus.Waiting).Value;
 				
 				var crawled = await CrawlPage(nextpage);
 				_crawlCollection[nextpage.Url] = crawled;
 
 				foreach (var newpage in (crawled.OutLinks ?? Enumerable.Empty<Uri>())) { AddUrlToCrawl(newpage); }
 
-#if DEBUG
-				if (_crawlCollection.Count(x=>x.Value.Result == CrawlResult.Success) > 20) { break; }
-#endif
+				#if DEBUG
+					if (_crawlCollection.Count(x=>x.Value.Status == CrawlStatus.Success) > 20) { break; }
+				#endif
 			}
 
-#if DEBUG
-			// Uncrawled pages are not initialised so need to be cleaned up or there will be exceptions thrown when accessing collections
-			// As this issue only affects debug it makes more sense to cleanup here than later
-			var toRemove = _crawlCollection.Where(x => x.Value.Result == CrawlResult.Waiting || x.Value.Result == CrawlResult.Processing).ToList();
-			foreach(var x in toRemove)
-			{
-				_crawlCollection.Remove(x);
-			}
-#endif
+			#if DEBUG
+				// Uncrawled pages are not initialised so need to be cleaned up or there will be exceptions thrown when accessing collections
+				// As this issue only affects debug it makes more sense to cleanup here than later
+				var toRemove = _crawlCollection.Where(x => x.Value.Status == CrawlStatus.Waiting || x.Value.Status == CrawlStatus.Processing).ToList();
+				foreach(var x in toRemove)
+				{
+					_crawlCollection.Remove(x);
+				}
+			#endif
 
 			foreach(var page in _crawlCollection)
 			{
@@ -71,7 +76,7 @@ namespace Crawler
 				_crawlCollection.Add(newpage, new Page
 				{
 					Url = newpage,
-					Result = CrawlResult.Waiting
+					Status = CrawlStatus.Waiting
 				});
 			}
 		}
@@ -84,13 +89,13 @@ namespace Crawler
 			{
 				var crawled = await client.GetStringAsync(page.Url);
 				parsedPage = await ParseResult(crawled);
-				parsedPage.Result = CrawlResult.Success;
+				parsedPage.Status = CrawlStatus.Success;
 			}
 			catch(Exception e)
 			{
 				parsedPage = new Page
 				{
-					Result = CrawlResult.Error,
+					Status = CrawlStatus.Error,
 					Exception = e
 				};
 			}

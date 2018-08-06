@@ -28,7 +28,7 @@ namespace Crawler
 				<li class=""page"">
 					<h4 class=""url"">{WebUtility.HtmlEncode(page.Value.Url.ToString())}</h4>
 					<div class=""title"">{WebUtility.HtmlEncode(page.Value.Title)}</div>
-					<div class=""status"">{WebUtility.HtmlEncode(page.Value.Result.ToString())}</div>
+					<div class=""status"">{WebUtility.HtmlEncode(page.Value.Status.ToString())}</div>
 					<h5>Inlinks</h5>
 				");
 
@@ -39,17 +39,17 @@ namespace Crawler
 				}
 				report.Append(@"</ul>");
 
-				if (page.Value.Result == CrawlResult.Error)
+				if (page.Value.Status == CrawlStatus.Error)
 				{
 					report.Append($@"<div class=""error"">{WebUtility.HtmlEncode(page.Value.Exception.ToString())}</div>");
 				}
 
-				if (page.Value.Result == CrawlResult.Success && page.Value.OutLinks.Any())
+				if (page.Value.Status == CrawlStatus.Success && page.Value.OutLinks.Any())
 				{
 					report.Append(@"<h5>Outlinks</h5><ul class=""outlinks"">");
 					foreach (var outlink in page.Value.OutLinks.OrderBy(x=>x.ToString()))
 					{
-						var outlinkStatus = CrawlResults.ContainsKey(outlink) ? CrawlResults[outlink].Result.ToString() : "Not in list";
+						var outlinkStatus = CrawlResults.ContainsKey(outlink) ? CrawlResults[outlink].Status.ToString() : "Not in list";
 						report.Append($@"<li class=""outlink""><span class=""outlink-url"">{WebUtility.HtmlEncode(outlink.ToString())}</span> <span class=""outlink-status"">{WebUtility.HtmlEncode(outlinkStatus)}</span></li>");
 					}
 					report.Append(@"</ul>");
