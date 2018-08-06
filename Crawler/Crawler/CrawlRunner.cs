@@ -91,6 +91,8 @@ namespace Crawler
 				parsedPage = await ParseResult(crawled);
 				parsedPage.Status = CrawlStatus.Success;
 			}
+			// Currently no special handling for any particular exception
+			// Future improvements would include capturing various sorts of exceptions to potentially requeue for crawling
 			catch(Exception e)
 			{
 				parsedPage = new Page

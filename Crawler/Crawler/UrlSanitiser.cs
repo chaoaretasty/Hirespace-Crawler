@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Crawler
 {
-    public class UrlSanitiser
+	//This class inspects links parsed from a page and checks to see if it is local to the given domain
+	//It also sanitises links as not all links as written in HTML would be appropriate (eg javascript void, malformed urls)
+	//Url fragments have been removed as these do not refer to separate pages (barring certain front-end frameworks, the parsing of which are beyond the scope of this project)
+	public class UrlSanitiser
     {
 		private readonly string _localHostname;
 		private readonly string _scheme;
