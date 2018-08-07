@@ -12,11 +12,11 @@ namespace Crawler
 		private readonly IDictionary<Uri, Page> _crawlCollection = new Dictionary<Uri, Page>();
 		private readonly HttpClient _client;
 		private readonly HtmlParser _parser;
-		private UrlSanitiser Sanitiser;
+		private readonly UrlSanitiser _sanitiser;
 
-		public CrawlRunner(Uri root, HttpClient client, HtmlParser parser)
+		public CrawlRunner(Uri root, HttpClient client, HtmlParser parser, UrlSanitiser sanitiser)
 		{
-			Sanitiser = new UrlSanitiser(root);
+			_sanitiser = sanitiser;
 			_client = client;
 			_parser = parser;
 			AddUrlToCrawl(root);
@@ -116,7 +116,7 @@ namespace Crawler
 
 			page.OutLinks = parsed.Body.QuerySelectorAll("a")
 				.Select(elem => elem.Attributes.SingleOrDefault(attr => attr.Name == "href" && !string.IsNullOrWhiteSpace(attr.Value))?.Value)
-				.Select(Sanitiser.SanitiseLocal)
+				.Select(_sanitiser.SanitiseLocal)
 				.Where(x => x != null)
 				.Distinct();
 

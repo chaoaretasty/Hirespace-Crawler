@@ -14,7 +14,7 @@ namespace Crawler
 			_baseUri = baseUri;
 		}
 
-		public Uri SanitiseLocal(string url)
+		public virtual Uri SanitiseLocal(string url)
 		{
 			if(url == null) { return null; }
 
