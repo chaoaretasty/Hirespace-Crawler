@@ -10,13 +10,15 @@ namespace Crawler
     public class CrawlRunner
     {
 		private readonly IDictionary<Uri, Page> _crawlCollection = new Dictionary<Uri, Page>();
-		private readonly HttpClient client = new HttpClient();
-		private readonly HtmlParser Parser = new HtmlParser();
+		private readonly HttpClient _client;
+		private readonly HtmlParser _parser;
 		private UrlSanitiser Sanitiser;
 
-		public CrawlRunner(Uri root)
+		public CrawlRunner(Uri root, HttpClient client, HtmlParser parser)
 		{
-			Sanitiser = new UrlSanitiser(root.Host, root.Scheme);
+			Sanitiser = new UrlSanitiser(root);
+			_client = client;
+			_parser = parser;
 			AddUrlToCrawl(root);
 			client.DefaultRequestHeaders.Add("user-agent", "Coding Sample Crawler");
 		}
@@ -54,7 +56,7 @@ namespace Crawler
 
 			foreach(var page in _crawlCollection)
 			{
-				foreach(var outlink in page.Value.OutLinks)
+				foreach(var outlink in page.Value.OutLinks ?? Enumerable.Empty<Uri>())
 				{
 					if (_crawlCollection.ContainsKey(outlink))
 					{
@@ -87,7 +89,7 @@ namespace Crawler
 			Page parsedPage;
 			try
 			{
-				var crawled = await client.GetStringAsync(page.Url);
+				var crawled = await _client.GetStringAsync(page.Url);
 				parsedPage = await ParseResult(crawled);
 				parsedPage.Status = CrawlStatus.Success;
 			}
@@ -108,7 +110,7 @@ namespace Crawler
 
 		private async Task<Page> ParseResult(string bodyContent)
 		{
-			var parsed = await Parser.ParseAsync(bodyContent);
+			var parsed = await _parser.ParseAsync(bodyContent);
 
 			var page = new Page { Title = parsed.Title };
 

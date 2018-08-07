@@ -7,15 +7,11 @@ namespace Crawler
 	//Url fragments have been removed as these do not refer to separate pages (barring certain front-end frameworks, the parsing of which are beyond the scope of this project)
 	public class UrlSanitiser
     {
-		private readonly string _localHostname;
-		private readonly string _scheme;
 		private Uri _baseUri;
 
-		public UrlSanitiser(string localHostname, string scheme)
+		public UrlSanitiser(Uri baseUri)
 		{
-			_localHostname = localHostname;
-			_scheme = scheme;
-			_baseUri = new Uri(_scheme + "://" + _localHostname);
+			_baseUri = baseUri;
 		}
 
 		public Uri SanitiseLocal(string url)
