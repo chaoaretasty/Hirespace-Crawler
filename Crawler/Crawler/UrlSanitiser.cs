@@ -37,7 +37,7 @@ namespace Crawler
 
 			if(Uri.TryCreate(url, UriKind.Absolute, out uri))
 			{
-				return (uri.Authority == _baseUri.Authority) ? uri : null;
+				return (uri.GetLeftPart(UriPartial.Authority) == _baseUri.GetLeftPart(UriPartial.Authority)) ? uri : null;
 			}
 			
 			return null;
